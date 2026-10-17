@@ -43,33 +43,49 @@ jobs:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: printf '%s\n' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
 
-      - name: Patch Gradle for Firebase
+      - name: Patch Gradle for Firebase and SDK 35
         run: |
           cat << 'PYEOF' > fix_gradle.py
           import os
           import re
 
-          def patch_file(path, pattern, replacement):
+          def patch_file(path, pattern, replacement, count=1):
               if not os.path.exists(path): return
               with open(path, 'r') as f: content = f.read()
-              if 'google-services' in content: return
-              content = re.sub(pattern, replacement, content, count=1)
+              content = re.sub(pattern, replacement, content, count=count)
               with open(path, 'w') as f: f.write(content)
 
-          # Patch Settings (Kotlin DSL)
+          # 1. Patch Settings (Kotlin DSL) for Google Services
           patch_file('android/settings.gradle.kts', r'(plugins\s*\{)', r'\1\n    id("com.google.gms.google-services") version "4.4.0" apply false')
-          
-          # Patch Root Build (Groovy)
+
+          # 2. Patch Root Build (Groovy) for Google Services
           patch_file('android/build.gradle', r'(classpath\s+["\']com\.android\.tools\.build:gradle)', r'classpath "com.google.gms:google-services:4.4.0"\n        \1')
-          
-          # Patch App Build (Kotlin DSL)
+
+          # 3. Patch App Build (Kotlin DSL) for Google Services
           patch_file('android/app/build.gradle.kts', r'(id\("com\.android\.application"\))', r'\1\n    id("com.google.gms.google-services")')
-          
-          # Patch App Build (Groovy)
+
+          # 4. Patch App Build (Groovy) for Google Services
           if os.path.exists('android/app/build.gradle'):
               with open('android/app/build.gradle', 'r') as f: content = f.read()
               if 'com.google.gms.google-services' not in content:
                   with open('android/app/build.gradle', 'a') as f: f.write('\napply plugin: "com.google.gms.google-services"\n')
+
+          # 5. Update compileSdk to 35 (Kotlin DSL)
+          if os.path.exists('android/app/build.gradle.kts'):
+              with open('android/app/build.gradle.kts', 'r') as f: content = f.read()
+              content = content.replace('compileSdk = flutter.compileSdkVersion', 'compileSdk = 35')
+              content = content.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 35')
+              content = content.replace('compileSdk = 33', 'compileSdk = 35')
+              with open('android/app/build.gradle.kts', 'w') as f: f.write(content)
+
+          # 6. Update compileSdk to 35 (Groovy)
+          if os.path.exists('android/app/build.gradle'):
+              with open('android/app/build.gradle', 'r') as f: content = f.read()
+              content = content.replace('compileSdkVersion flutter.compileSdkVersion', 'compileSdkVersion 35')
+              content = content.replace('compileSdk flutter.compileSdkVersion', 'compileSdk 35')
+              content = content.replace('compileSdkVersion 33', 'compileSdkVersion 35')
+              content = content.replace('compileSdk 33', 'compileSdk 35')
+              with open('android/app/build.gradle', 'w') as f: f.write(content)
           PYEOF
           python3 fix_gradle.py
 
