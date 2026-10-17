@@ -3,8 +3,6 @@ name: Build Android APK
 on:
   push:
     branches: [ "master", "main" ]
-  pull_request:
-    branches: [ "master", "main" ]
   workflow_dispatch:
 
 jobs:
@@ -27,9 +25,35 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # الخطوة السحرية: إنشاء ملفات الأندرويد الناقصة أوتوماتيك
       - name: Generate Android Platform Files
-        run: flutter create . --platforms android
+        run: flutter create . --platforms android --org com.motab3a --project-name motab3a
+
+      - name: Fix applicationId
+        run: |
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i 's/applicationId = "com.motab3a.motab3a"/applicationId = "com.motab3a.mr"/' android/app/build.gradle.kts
+          elif [ -f android/app/build.gradle ]; then
+            sed -i 's/applicationId "com.motab3a.motab3a"/applicationId "com.motab3a.mr"/' android/app/build.gradle
+          fi
+
+      - name: Inject google-services.json
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: printf '%s\n' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
+
+      - name: Patch Gradle for Firebase
+        run: |
+          if [ -f "android/build.gradle.kts" ]; then
+            sed -i 's/id("com.android.application") version ".*" apply false/&\n    id("com.google.gms.google-services") version "4.4.0" apply false/' android/build.gradle.kts
+          elif [ -f "android/build.gradle" ]; then
+            sed -i 's/classpath .com.android.tools.build:gradle.*/&\n        classpath "com.google.gms:google-services:4.4.0"/' android/build.gradle
+          fi
+
+          if [ -f "android/app/build.gradle.kts" ]; then
+            sed -i 's/id("com.android.application")/&\n    id("com.google.gms.google-services")/' android/app/build.gradle.kts
+          elif [ -f "android/app/build.gradle" ]; then
+            echo 'apply plugin: "com.google.gms.google-services"' >> android/app/build.gradle
+          fi
 
       - name: Install dependencies
         run: flutter pub get

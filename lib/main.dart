@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(); // تهيئة Firebase
   runApp(const Motab3aApp());
 }
 
@@ -15,7 +18,6 @@ class Motab3aApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A73E8)),
         useMaterial3: true,
-        fontFamily: 'Cairo', // سنضيفه لاحقاً
       ),
       home: const Directionality(
         textDirection: TextDirection.rtl,
@@ -24,14 +26,14 @@ class Motab3aApp extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle, size: 100, color: Color(0xFF0F9D58)),
+                Icon(Icons.local_fire_department, size: 100, color: Color(0xFFFF9800)),
                 SizedBox(height: 20),
                 Text(
-                  'تم بناء التطبيق بنجاح!',
+                  'Firebase اتصل بنجاح!',
                   style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 10),
-                Text('GitHub Actions يعمل بكفاءة 🚀'),
+                Text('التطبيق جاهز لبناء النظام 🚀'),
               ],
             ),
           ),

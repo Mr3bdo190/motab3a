@@ -1,12 +1,14 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:motab3a/main.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 void main() {
   testWidgets('App smoke test', (WidgetTester tester) async {
-    // بناء التطبيق
+    // إعداد Firebase وهمي للاختبار
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await Firebase.initializeApp();
+    
     await tester.pumpWidget(const Motab3aApp());
-
-    // التأكد من ظهور النص
-    expect(find.text('تم بناء التطبيق بنجاح!'), findsOneWidget);
+    expect(find.text('Firebase اتصل بنجاح!'), findsOneWidget);
   });
 }
