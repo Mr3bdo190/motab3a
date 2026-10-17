@@ -31,9 +31,11 @@ jobs:
       - name: Fix applicationId
         run: |
           if [ -f android/app/build.gradle.kts ]; then
-            sed -i 's/applicationId = "com.motab3a.motab3a"/applicationId = "com.motab3a.mr"/' android/app/build.gradle.kts
+            sed -i 's/applicationId = ".*"/applicationId = "com.motab3a.mr"/' android/app/build.gradle.kts
+            sed -i 's/namespace = ".*"/namespace = "com.motab3a.mr"/' android/app/build.gradle.kts
           elif [ -f android/app/build.gradle ]; then
-            sed -i 's/applicationId "com.motab3a.motab3a"/applicationId "com.motab3a.mr"/' android/app/build.gradle
+            sed -i 's/applicationId ".*"/applicationId "com.motab3a.mr"/' android/app/build.gradle
+            sed -i 's/namespace ".*"/namespace "com.motab3a.mr"/' android/app/build.gradle
           fi
 
       - name: Inject google-services.json
@@ -43,17 +45,33 @@ jobs:
 
       - name: Patch Gradle for Firebase
         run: |
-          if [ -f "android/build.gradle.kts" ]; then
-            sed -i 's/id("com.android.application") version ".*" apply false/&\n    id("com.google.gms.google-services") version "4.4.0" apply false/' android/build.gradle.kts
-          elif [ -f "android/build.gradle" ]; then
-            sed -i 's/classpath .com.android.tools.build:gradle.*/&\n        classpath "com.google.gms:google-services:4.4.0"/' android/build.gradle
-          fi
+          cat << 'PYEOF' > fix_gradle.py
+          import os
+          import re
 
-          if [ -f "android/app/build.gradle.kts" ]; then
-            sed -i 's/id("com.android.application")/&\n    id("com.google.gms.google-services")/' android/app/build.gradle.kts
-          elif [ -f "android/app/build.gradle" ]; then
-            echo 'apply plugin: "com.google.gms.google-services"' >> android/app/build.gradle
-          fi
+          def patch_file(path, pattern, replacement):
+              if not os.path.exists(path): return
+              with open(path, 'r') as f: content = f.read()
+              if 'google-services' in content: return
+              content = re.sub(pattern, replacement, content, count=1)
+              with open(path, 'w') as f: f.write(content)
+
+          # Patch Settings (Kotlin DSL)
+          patch_file('android/settings.gradle.kts', r'(plugins\s*\{)', r'\1\n    id("com.google.gms.google-services") version "4.4.0" apply false')
+          
+          # Patch Root Build (Groovy)
+          patch_file('android/build.gradle', r'(classpath\s+["\']com\.android\.tools\.build:gradle)', r'classpath "com.google.gms:google-services:4.4.0"\n        \1')
+          
+          # Patch App Build (Kotlin DSL)
+          patch_file('android/app/build.gradle.kts', r'(id\("com\.android\.application"\))', r'\1\n    id("com.google.gms.google-services")')
+          
+          # Patch App Build (Groovy)
+          if os.path.exists('android/app/build.gradle'):
+              with open('android/app/build.gradle', 'r') as f: content = f.read()
+              if 'com.google.gms.google-services' not in content:
+                  with open('android/app/build.gradle', 'a') as f: f.write('\napply plugin: "com.google.gms.google-services"\n')
+          PYEOF
+          python3 fix_gradle.py
 
       - name: Install dependencies
         run: flutter pub get
