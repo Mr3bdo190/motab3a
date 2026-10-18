@@ -4,6 +4,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../models/customer.dart';
 import '../../../models/route_stop.dart';
 import '../../../services/route_service.dart';
+import '../../driver/driver_visit_screen.dart';
 
 class RouteDetailsScreen extends StatelessWidget {
   final String routeId;
@@ -55,7 +56,7 @@ class RouteDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الخط'),
+        title: Text(isAdmin ? 'تفاصيل الخط (مدير)' : 'خط سيري'),
         actions: [
           if (isAdmin)
             IconButton(
@@ -63,7 +64,7 @@ class RouteDetailsScreen extends StatelessWidget {
               tooltip: 'نشر للسائق',
               onPressed: () async {
                 await RouteService().publishRoute(routeId);
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النشر!'), backgroundColor: AppTheme.success));
+                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النشر! السائق سيراه الآن'), backgroundColor: AppTheme.success));
               },
             )
         ],
@@ -80,12 +81,33 @@ class RouteDetailsScreen extends StatelessWidget {
             itemCount: stops.length,
             itemBuilder: (context, index) {
               final stop = stops[index];
+              final isDone = stop.status != 'pending';
+              
               return Card(
+                elevation: 2,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.only(bottom: 12),
                 child: ListTile(
-                  leading: CircleAvatar(child: Text(stop.orderIndex.toString())),
-                  title: Text(stop.customerName),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  leading: CircleAvatar(
+                    backgroundColor: isDone ? AppTheme.success.withOpacity(0.1) : AppTheme.primary.withOpacity(0.1),
+                    child: Text(stop.orderIndex.toString(), style: TextStyle(color: isDone ? AppTheme.success : AppTheme.primary, fontWeight: FontWeight.bold)),
+                  ),
+                  title: Text(stop.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
                   subtitle: Text(stop.customerPhone),
-                  trailing: Text(stop.status == 'completed' ? 'تم' : 'معلق', style: TextStyle(color: stop.status == 'completed' ? AppTheme.success : AppTheme.warning)),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(isDone ? 'تم' : 'معلق', style: TextStyle(color: isDone ? AppTheme.success : AppTheme.warning, fontWeight: FontWeight.bold)),
+                      if (isDone) Text('${stop.collectedAmount} ج.م', style: const TextStyle(fontSize: 12, color: AppTheme.textLight)),
+                    ],
+                  ),
+                  onTap: () {
+                    if (!isAdmin) {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => DriverVisitScreen(stop: stop)));
+                    }
+                  },
                 ),
               );
             },
