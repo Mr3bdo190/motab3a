@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'products/product_list_screen.dart';
+import 'customers/customer_list_screen.dart'; // ضفنا الاستدعاء ده
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -80,7 +81,7 @@ class AdminDashboard extends StatelessWidget {
                   title: 'العملاء',
                   icon: Icons.people,
                   color: Colors.green,
-                  onTap: () {},
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerListScreen())), // هنا الربط
                   delay: 100,
                 ),
                 _DashboardCard(
