@@ -102,7 +102,7 @@ class _DashboardCard extends StatelessWidget {
           children: [
             Container(padding: const EdgeInsets.all(16), decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle), child: Icon(icon, color: color, size: 30)),
             const SizedBox(height: 12),
-            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: isDark ? Colors.white : AppTheme.textDark)),
+            Text(title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Theme.of(context).textTheme.bodyLarge?.color)),
           ],
         ),
       ).animate().fadeIn(delay: delay.ms).scaleXY(begin: 0.8, curve: Curves.easeOutBack),

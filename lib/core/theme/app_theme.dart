@@ -8,17 +8,11 @@ class AppTheme {
   static const Color danger = Color(0xFFE53935);
   static const Color warning = Color(0xFFFF9800);
   
-  // رجعنا الألوان دي تاني
-  static const Color textDark = Color(0xFF202124);
-  static const Color textLight = Color(0xFF5F6368);
-  
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primary, primary: primary, background: const Color(0xFFF5F7FA), error: danger,
-      ),
+      colorScheme: ColorScheme.fromSeed(seedColor: primary, primary: primary, background: const Color(0xFFF5F7FA), error: danger),
       textTheme: GoogleFonts.cairoTextTheme(ThemeData.light().textTheme),
       scaffoldBackgroundColor: const Color(0xFFF5F7FA),
       appBarTheme: AppBarTheme(
@@ -40,9 +34,7 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: primary, primary: primary, background: const Color(0xFF121212), surface: const Color(0xFF1E1E1E), error: danger,
-      ),
+      colorScheme: ColorScheme.fromSeed(seedColor: primary, primary: primary, background: const Color(0xFF121212), surface: const Color(0xFF1E1E1E), error: danger),
       textTheme: GoogleFonts.cairoTextTheme(ThemeData.dark().textTheme),
       scaffoldBackgroundColor: const Color(0xFF121212),
       appBarTheme: AppBarTheme(

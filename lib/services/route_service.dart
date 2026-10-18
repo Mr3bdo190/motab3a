@@ -26,14 +26,7 @@ class RouteService {
 
   Future<String> createRoute(String date, String driverId, String driverName) async {
     final ref = _db.child('daily_routes').push();
-    await ref.set({
-      'date': date,
-      'driver_id': driverId,
-      'driver_name': driverName,
-      'is_published': false,
-      'status': 'draft',
-      'created_at': ServerValue.timestamp,
-    });
+    await ref.set({'date': date, 'driver_id': driverId, 'driver_name': driverName, 'is_published': false, 'status': 'draft', 'created_at': ServerValue.timestamp});
     return ref.key!;
   }
 
@@ -50,9 +43,7 @@ class RouteService {
     final stopsSnap = await _db.child('route_stops').orderByChild('route_id').equalTo(routeId).get();
     if (stopsSnap.exists) {
       final data = stopsSnap.value as Map;
-      for (var key in data.keys) {
-        await _db.child('route_stops').child(key).remove();
-      }
+      for (var key in data.keys) { await _db.child('route_stops').child(key).remove(); }
     }
   }
 
@@ -68,15 +59,9 @@ class RouteService {
 
   Future<void> addStopToRoute(String routeId, Customer customer, int index) async {
     await _db.child('route_stops').push().set({
-      'route_id': routeId,
-      'customer_id': customer.id,
-      'customer_name': customer.name,
-      'customer_phone': customer.phone,
-      'customer_address': customer.address,
-      'order_index': index,
-      'status': 'pending',
-      'collected_amount': 0.0,
-      'order_items': {},
+      'route_id': routeId, 'customer_id': customer.id, 'customer_name': customer.name,
+      'customer_phone': customer.phone, 'customer_address': customer.address,
+      'order_index': index, 'status': 'pending', 'collected_amount': 0.0, 'required_amount': 0.0, 'order_items': {},
     });
   }
 
@@ -85,19 +70,18 @@ class RouteService {
     await _db.child('route_stops').child(stopId).update({'order_items': itemsMap});
   }
 
-  // هنا التعديل المهم: بناخد بيانات العميل ونحفظها في التحصيل
   Future<void> recordCollection(RouteStop stop, double amount, String status) async {
     await _db.child('route_stops').child(stop.id).update({
-      'collected_amount': amount,
-      'status': status,
-      'updated_at': ServerValue.timestamp,
+      'collected_amount': amount, 'status': status, 'updated_at': ServerValue.timestamp,
     });
     
+    // حفظ التحصيل وربطه بخط السير والعميل
     await _db.child('collections').push().set({
       'stop_id': stop.id,
-      'customer_name': stop.customerName, // حفظنا الاسم
-      'customer_phone': stop.customerPhone, // حفظنا الرقم
-      'customer_address': stop.customerAddress, // حفظنا العنوان
+      'route_id': stop.routeId, // ربطنا التحصيل بخط السير
+      'customer_name': stop.customerName,
+      'customer_phone': stop.customerPhone,
+      'customer_address': stop.customerAddress,
       'amount': amount,
       'timestamp': ServerValue.timestamp,
     });

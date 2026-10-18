@@ -3,11 +3,9 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/daily_route.dart';
-import '../../models/route_stop.dart';
 import '../../services/route_service.dart';
 import '../admin/routes/route_details_screen.dart';
 import '../shared/change_password_screen.dart';
-import 'package:intl/intl.dart';
 
 class DriverHome extends StatefulWidget {
   const DriverHome({super.key});
@@ -29,6 +27,8 @@ class _DriverHomeState extends State<DriverHome> {
           backgroundColor: AppTheme.success,
           bottom: const TabBar(
             indicatorColor: Colors.white,
+            labelColor: Colors.white,
+            unselectedLabelColor: Colors.white70,
             tabs: [Tab(text: 'اليوم'), Tab(text: 'الأرشيف')],
           ),
           actions: [
@@ -38,8 +38,8 @@ class _DriverHomeState extends State<DriverHome> {
         ),
         body: TabBarView(
           children: [
-            _buildRoutesList(driverId, false), // اليوم
-            _buildRoutesList(driverId, true),  // الأرشيف
+            _buildRoutesList(driverId, false),
+            _buildRoutesList(driverId, true),
           ],
         ),
       ),
@@ -54,7 +54,7 @@ class _DriverHomeState extends State<DriverHome> {
         
         final routes = snapshot.data!.where((r) => showCompleted ? (r.status == 'completed' && r.isPublished) : (r.status != 'completed' && r.isPublished)).toList();
         
-        if (routes.isEmpty) return Center(child: Text(showCompleted ? 'لا يوجد خطوط سابقة' : 'لا يوجد خط سير مسند لك اليوم'));
+        if (routes.isEmpty) return Center(child: Text(showCompleted ? 'لا يوجد خطوط سابقة' : 'لا يوجد خط سير مسند لك اليوم', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color)));
 
         return ListView.builder(
           padding: const EdgeInsets.all(16),
@@ -62,7 +62,7 @@ class _DriverHomeState extends State<DriverHome> {
           itemBuilder: (context, index) {
             final route = routes[index];
             return Card(
-              elevation: 4,
+              elevation: 4, color: Theme.of(context).cardColor,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               child: InkWell(
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RouteDetailsScreen(routeId: route.id, isAdmin: false))),
@@ -73,9 +73,9 @@ class _DriverHomeState extends State<DriverHome> {
                     children: [
                       Icon(showCompleted ? Icons.archive : Icons.local_shipping, size: 60, color: showCompleted ? Colors.grey : AppTheme.success),
                       const SizedBox(height: 16),
-                      Text('تاريخ: ${route.date}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      Text('تاريخ: ${route.date}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Theme.of(context).textTheme.bodyLarge?.color)),
                       const SizedBox(height: 8),
-                      Text(showCompleted ? 'مكتمل' : 'اضغط لفتح تفاصيل الزيارات', style: TextStyle(color: showCompleted ? AppTheme.primary : AppTheme.textLight)),
+                      Text(showCompleted ? 'مكتمل' : 'اضغط لفتح تفاصيل الزيارات', style: TextStyle(color: showCompleted ? AppTheme.primary : Theme.of(context).textTheme.bodyMedium?.color)),
                     ],
                   ),
                 ),

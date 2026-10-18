@@ -34,8 +34,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24.0),
@@ -45,42 +46,30 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 60),
               Container(
                 padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withOpacity(0.1),
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: AppTheme.primary.withOpacity(0.1), shape: BoxShape.circle),
                 child: const Icon(Icons.local_shipping, size: 80, color: AppTheme.primary),
               ).animate().scale(duration: 600.ms, curve: Curves.easeOutBack),
               const SizedBox(height: 24),
               const Text('متابعة', style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: AppTheme.primary)).animate().fadeIn(delay: 200.ms).slideY(begin: 0.5),
-              const Text('نظام إدارة التوزيع والتحصيل', style: TextStyle(fontSize: 16, color: AppTheme.textLight)).animate().fadeIn(delay: 300.ms),
+              Text('نظام إدارة التوزيع والتحصيل', style: TextStyle(fontSize: 16, color: isDark ? Colors.grey.shade400 : Colors.grey.shade600)).animate().fadeIn(delay: 300.ms),
               const SizedBox(height: 48),
               TextField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
-                  labelText: 'رقم الهاتف أو البريد',
-                  prefixIcon: Icon(Icons.person_outline),
-                ),
+                decoration: const InputDecoration(labelText: 'رقم الهاتف أو البريد', prefixIcon: Icon(Icons.person_outline)),
               ).animate().fadeIn(delay: 400.ms).slideX(begin: 0.2),
               const SizedBox(height: 20),
               TextField(
                 controller: _passwordController,
                 obscureText: true,
-                decoration: const InputDecoration(
-                  labelText: 'كلمة المرور',
-                  prefixIcon: Icon(Icons.lock_outline),
-                ),
+                decoration: const InputDecoration(labelText: 'كلمة المرور', prefixIcon: Icon(Icons.lock_outline)),
               ).animate().fadeIn(delay: 500.ms).slideX(begin: 0.2),
               const SizedBox(height: 32),
               SizedBox(
-                width: double.infinity,
-                height: 55,
+                width: double.infinity, height: 55,
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _login,
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('تسجيل الدخول', style: TextStyle(fontSize: 18)),
+                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('تسجيل الدخول', style: TextStyle(fontSize: 18)),
                 ),
               ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2),
             ],
