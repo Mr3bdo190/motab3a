@@ -23,10 +23,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('إدارة العملاء'),
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark]))),
-      ),
+      appBar: AppBar(title: const Text('إدارة العملاء'), flexibleSpace: Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark])))),
       body: Column(
         children: [
           Padding(
@@ -35,7 +32,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               onChanged: (val) => setState(() => _searchQuery = val.trim()),
               decoration: InputDecoration(
                 hintText: 'ابحث بالاسم، الكود، أو الهاتف...',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.textLight),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyLarge?.color),
                 fillColor: Theme.of(context).cardColor,
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -47,17 +44,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
                 var customers = snapshot.data ?? [];
-                if (_searchQuery.isNotEmpty) {
-                  customers = customers.where((c) => c.name.contains(_searchQuery) || c.code.contains(_searchQuery) || c.phone.contains(_searchQuery)).toList();
-                }
-
-                if (customers.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.people_outline,
-                    title: 'لا يوجد عملاء',
-                    subtitle: 'اضغط على الزر بالأسفل لإضافة أول عميل',
-                  );
-                }
+                if (_searchQuery.isNotEmpty) { customers = customers.where((c) => c.name.contains(_searchQuery) || c.code.contains(_searchQuery) || c.phone.contains(_searchQuery)).toList(); }
+                if (customers.isEmpty) { return const EmptyState(icon: Icons.people_outline, title: 'لا يوجد عملاء', subtitle: 'اضغط على الزر بالأسفل لإضافة أول عميل'); }
 
                 return RefreshIndicator(
                   onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
@@ -70,19 +58,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         key: Key(customer.id),
                         direction: DismissDirection.endToStart,
                         background: Container(alignment: Alignment.centerLeft, padding: const EdgeInsets.symmetric(horizontal: 20), decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.delete, color: Colors.white)),
-                        confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('حذف العميل'),
-                              content: Text('هل أنت متأكد من حذف "${customer.name}"؟'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
-                                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('حذف', style: TextStyle(color: AppTheme.danger))),
-                              ],
-                            ),
-                          );
-                        },
+                        confirmDismiss: (direction) async => await showDialog(context: context, builder: (context) => AlertDialog(title: const Text('حذف العميل'), content: Text('هل أنت متأكد من حذف "${customer.name}"؟'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')), TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('حذف', style: TextStyle(color: AppTheme.danger)))])),
                         onDismissed: (_) => _customerService.deleteCustomer(customer.id),
                         child: Card(
                           elevation: 2, margin: const EdgeInsets.only(bottom: 12),
@@ -96,7 +72,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                               children: [
                                 const SizedBox(height: 4),
                                 Text('📞 ${customer.phone}'),
-                                if (customer.area.isNotEmpty) Text('📍 ${customer.area}', style: const TextStyle(color: AppTheme.textLight)),
+                                if (customer.area.isNotEmpty) Text('📍 ${customer.area}', style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color)),
                               ],
                             ),
                             trailing: const Icon(Icons.edit, size: 16, color: Colors.grey),
@@ -112,10 +88,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddCustomerSheet(),
-        backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('إضافة عميل', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        onPressed: () => _showAddCustomerSheet(), backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.add, color: Colors.white), label: const Text('إضافة عميل', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ).animate().scale(delay: 300.ms, curve: Curves.easeOutBack),
     );
   }
@@ -176,13 +150,7 @@ class _AddCustomerSheetState extends State<AddCustomerSheet> {
                 const SizedBox(height: 20),
                 TextFormField(controller: _nameController, decoration: const InputDecoration(labelText: 'اسم العميل', prefixIcon: Icon(Icons.person_outline)), validator: (v) => v!.isEmpty ? 'مطلوب' : null),
                 const SizedBox(height: 16),
-                TextFormField(
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly], // أرقام فقط
-                  decoration: const InputDecoration(labelText: 'رقم الهاتف', prefixIcon: Icon(Icons.phone)),
-                  validator: (v) => v!.isEmpty ? 'مطلوب' : null,
-                ),
+                TextFormField(controller: _phoneController, keyboardType: TextInputType.phone, inputFormatters: [FilteringTextInputFormatter.digitsOnly], decoration: const InputDecoration(labelText: 'رقم الهاتف', prefixIcon: Icon(Icons.phone)), validator: (v) => v!.isEmpty ? 'مطلوب' : null),
                 const SizedBox(height: 16),
                 Row(
                   children: [

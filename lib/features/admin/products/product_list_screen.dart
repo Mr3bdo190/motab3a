@@ -23,10 +23,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('إدارة المنتجات'),
-        flexibleSpace: Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark]))),
-      ),
+      appBar: AppBar(title: const Text('إدارة المنتجات'), flexibleSpace: Container(decoration: const BoxDecoration(gradient: LinearGradient(colors: [AppTheme.primary, AppTheme.primaryDark])))),
       body: Column(
         children: [
           Padding(
@@ -35,7 +32,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               onChanged: (val) => setState(() => _searchQuery = val.trim()),
               decoration: InputDecoration(
                 hintText: 'ابحث بالاسم أو الكود...',
-                prefixIcon: const Icon(Icons.search, color: AppTheme.textLight),
+                prefixIcon: Icon(Icons.search, color: Theme.of(context).textTheme.bodyLarge?.color),
                 fillColor: Theme.of(context).cardColor,
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
@@ -47,19 +44,9 @@ class _ProductListScreenState extends State<ProductListScreen> {
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
                 var products = snapshot.data ?? [];
-                if (_searchQuery.isNotEmpty) {
-                  products = products.where((p) => p.name.contains(_searchQuery) || p.code.contains(_searchQuery)).toList();
-                }
+                if (_searchQuery.isNotEmpty) { products = products.where((p) => p.name.contains(_searchQuery) || p.code.contains(_searchQuery)).toList(); }
+                if (products.isEmpty) { return const EmptyState(icon: Icons.inventory_2_outlined, title: 'لا يوجد منتجات', subtitle: 'اضغط على الزر بالأسفل لإضافة أول منتج'); }
 
-                if (products.isEmpty) {
-                  return const EmptyState(
-                    icon: Icons.inventory_2_outlined,
-                    title: 'لا يوجد منتجات',
-                    subtitle: 'اضغط على الزر بالأسفل لإضافة أول منتج',
-                  );
-                }
-
-                // Pull to refresh
                 return RefreshIndicator(
                   onRefresh: () async => await Future.delayed(const Duration(seconds: 1)),
                   child: ListView.builder(
@@ -71,20 +58,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         key: Key(product.id),
                         direction: DismissDirection.endToStart,
                         background: Container(alignment: Alignment.centerLeft, padding: const EdgeInsets.symmetric(horizontal: 20), decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(16)), child: const Icon(Icons.delete, color: Colors.white)),
-                        // تأكيد الحذف
-                        confirmDismiss: (direction) async {
-                          return await showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: const Text('حذف المنتج'),
-                              content: Text('هل أنت متأكد من حذف "${product.name}"؟'),
-                              actions: [
-                                TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
-                                TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('حذف', style: TextStyle(color: AppTheme.danger))),
-                              ],
-                            ),
-                          );
-                        },
+                        confirmDismiss: (direction) async => await showDialog(context: context, builder: (context) => AlertDialog(title: const Text('حذف المنتج'), content: Text('هل أنت متأكد من حذف "${product.name}"؟'), actions: [TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')), TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('حذف', style: TextStyle(color: AppTheme.danger)))])),
                         onDismissed: (_) => _productService.deleteProduct(product.id),
                         child: Card(
                           elevation: 2, margin: const EdgeInsets.only(bottom: 12),
@@ -114,16 +88,13 @@ class _ProductListScreenState extends State<ProductListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showAddProductSheet(),
-        backgroundColor: AppTheme.primary,
-        icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('إضافة منتج', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        onPressed: () => _showAddProductSheet(), backgroundColor: AppTheme.primary,
+        icon: const Icon(Icons.add, color: Colors.white), label: const Text('إضافة منتج', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
       ).animate().scale(delay: 300.ms, curve: Curves.easeOutBack),
     );
   }
 }
 
-// الـ AddProductSheet
 class AddProductSheet extends StatefulWidget {
   final Product? product;
   const AddProductSheet({super.key, this.product});
@@ -183,7 +154,7 @@ class _AddProductSheetState extends State<AddProductSheet> {
               TextFormField(
                 controller: _priceController, 
                 keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))], // أرقام ونقطة عشرية فقط
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
                 decoration: const InputDecoration(labelText: 'السعر', prefixIcon: Icon(Icons.attach_money)), 
                 validator: (v) => v!.isEmpty ? 'مطلوب' : null
               ),

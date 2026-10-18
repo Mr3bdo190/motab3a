@@ -7,7 +7,6 @@ import '../../services/route_service.dart';
 class DriverVisitScreen extends StatefulWidget {
   final RouteStop stop;
   const DriverVisitScreen({super.key, required this.stop});
-
   @override
   State<DriverVisitScreen> createState() => _DriverVisitScreenState();
 }
@@ -67,7 +66,7 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
                     const SizedBox(height: 12),
                     Text(widget.stop.customerName, style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 8),
-                    Text('📞 ${widget.stop.customerPhone}', style: const TextStyle(fontSize: 16, color: AppTheme.textLight)),
+                    Text('📞 ${widget.stop.customerPhone}', style: TextStyle(fontSize: 16, color: Theme.of(context).textTheme.bodyMedium?.color)),
                     const SizedBox(height: 12),
                     if (widget.stop.requiredAmount > 0)
                       Container(
