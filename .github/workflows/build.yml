@@ -25,58 +25,10 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Platform Files
-        run: flutter create . --platforms android --org com.motab3a --project-name motab3a
-
       - name: Inject google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
         run: printf '%s\n' "$GOOGLE_SERVICES_JSON" > android/app/google-services.json
-
-      - name: Patch Gradle for Firebase and SDK 34
-        run: |
-          cat << 'PYEOF' > fix_gradle.py
-          import os
-          import re
-
-          def patch_file(path, pattern, replacement):
-              if not os.path.exists(path): return
-              with open(path, 'r') as f: content = f.read()
-              content = re.sub(pattern, replacement, content)
-              with open(path, 'w') as f: f.write(content)
-
-          # 1. ضبط applicationId و namespace
-          patch_file('android/app/build.gradle.kts', r'(applicationId\s*=\s*")[^"]*(")', r'\1com.motab3a.mr\2')
-          patch_file('android/app/build.gradle.kts', r'(namespace\s*=\s*")[^"]*(")', r'\1com.motab3a.mr\2')
-          patch_file('android/app/build.gradle', r'(applicationId\s+")[^"]*(")', r'\1com.motab3a.mr\2')
-          patch_file('android/app/build.gradle', r'(namespace\s+")[^"]*(")', r'\1com.motab3a.mr\2')
-
-          # 2. إضافة Google Services Plugin
-          patch_file('android/settings.gradle.kts', r'(plugins\s*\{)', r'\1\n    id("com.google.gms.google-services") version "4.4.0" apply false')
-          patch_file('android/build.gradle', r'(classpath\s+["\']com\.android\.tools\.build:gradle)', r'classpath "com.google.gms:google-services:4.4.0"\n        \1')
-          patch_file('android/app/build.gradle.kts', r'(id\("com\.android\.application"\))', r'\1\n    id("com.google.gms.google-services")')
-          if os.path.exists('android/app/build.gradle'):
-              with open('android/app/build.gradle', 'r') as f: content = f.read()
-              if 'com.google.gms.google-services' not in content:
-                  with open('android/app/build.gradle', 'a') as f: f.write('\napply plugin: "com.google.gms.google-services"\n')
-
-          # 3. إجبار compileSdk و targetSdk على الإصدار 34 (مع مراعاة الفرق بين Kotlin و Groovy)
-          for path in ['android/app/build.gradle', 'android/app/build.gradle.kts']:
-              if not os.path.exists(path): continue
-              with open(path, 'r') as f: content = f.read()
-              
-              if path.endswith('.kts'):
-                  # Kotlin DSL تحتاج علامة يساوي
-                  content = re.sub(r'compileSdk\s*=[^\n]*', 'compileSdk = 34', content)
-                  content = re.sub(r'targetSdk\s*=[^\n]*', 'targetSdk = 34', content)
-              else:
-                  # Groovy القديمة مش تحتاج يساوي
-                  content = re.sub(r'compileSdk(Version)?\s*[^\n]*', 'compileSdk 34', content)
-                  content = re.sub(r'targetSdk(Version)?\s*[^\n]*', 'targetSdk 34', content)
-                  
-              with open(path, 'w') as f: f.write(content)
-          PYEOF
-          python3 fix_gradle.py
 
       - name: Install dependencies
         run: flutter pub get
