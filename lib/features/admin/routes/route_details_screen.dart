@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/customer.dart';
 import '../../../models/route_stop.dart';
 import '../../../services/route_service.dart';
 import '../../driver/driver_visit_screen.dart';
+import 'manage_order_screen.dart';
 
 class RouteDetailsScreen extends StatelessWidget {
   final String routeId;
@@ -56,15 +58,23 @@ class RouteDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(isAdmin ? 'تفاصيل الخط (مدير)' : 'خط سيري'),
+        title: Text(isAdmin ? 'تفاصيل الخط (مدير)' : 'خط سير اليوم'),
         actions: [
           if (isAdmin)
             IconButton(
               icon: const Icon(Icons.publish, color: Colors.white),
-              tooltip: 'نشر للسائق',
               onPressed: () async {
                 await RouteService().publishRoute(routeId);
                 if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النشر! السائق سيراه الآن'), backgroundColor: AppTheme.success));
+              },
+            ),
+          if (!isAdmin)
+            IconButton(
+              icon: const Icon(Icons.check_circle, color: Colors.white),
+              tooltip: 'إنهاء خط السير',
+              onPressed: () async {
+                await RouteService().completeRoute(routeId);
+                if (context.mounted) Navigator.pop(context);
               },
             )
         ],
@@ -77,51 +87,116 @@ class RouteDetailsScreen extends StatelessWidget {
           if (stops.isEmpty) return const Center(child: Text('لا يوجد عملاء في هذا الخط'));
           
           return ListView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(12),
             itemCount: stops.length,
             itemBuilder: (context, index) {
               final stop = stops[index];
               final isDone = stop.status != 'pending';
               
               return Card(
-                elevation: 2,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  leading: CircleAvatar(
-                    backgroundColor: isDone ? AppTheme.success.withOpacity(0.1) : AppTheme.primary.withOpacity(0.1),
-                    child: Text(stop.orderIndex.toString(), style: TextStyle(color: isDone ? AppTheme.success : AppTheme.primary, fontWeight: FontWeight.bold)),
-                  ),
-                  title: Text(stop.customerName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text(stop.customerPhone),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                elevation: 4,
+                shadowColor: Colors.black26,
+                margin: const EdgeInsets.only(bottom: 16),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20), side: BorderSide(color: isDone ? AppTheme.success.withOpacity(0.3) : AppTheme.primary.withOpacity(0.3), width: 1.5)),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(isDone ? 'تم' : 'معلق', style: TextStyle(color: isDone ? AppTheme.success : AppTheme.warning, fontWeight: FontWeight.bold)),
-                      if (isDone) Text('${stop.collectedAmount} ج.م', style: const TextStyle(fontSize: 12, color: AppTheme.textLight)),
+                      // رأس الكارت: الاسم والاتصال
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 24,
+                            backgroundColor: isDone ? AppTheme.success.withOpacity(0.1) : AppTheme.primary.withOpacity(0.1),
+                            child: Text('${stop.orderIndex}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: isDone ? AppTheme.success : AppTheme.primary)),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(stop.customerName, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.textDark)),
+                                const SizedBox(height: 4),
+                                Row(
+                                  children: [
+                                    const Icon(Icons.location_on, size: 16, color: AppTheme.textLight),
+                                    const SizedBox(width: 4),
+                                    Expanded(child: Text(stop.customerAddress.isEmpty ? 'عنوان غير مسجل' : stop.customerAddress, style: const TextStyle(fontSize: 13, color: AppTheme.textLight))),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.phone, color: Colors.white),
+                            style: IconButton.styleFrom(backgroundColor: AppTheme.success),
+                            onPressed: () => launchUrl(Uri.parse('tel:${stop.customerPhone}')),
+                          )
+                        ],
+                      ),
+                      const Divider(height: 24),
+                      
+                      // تفاصيل الطلب
+                      if (stop.orderItems.isNotEmpty) ...[
+                        const Text('تفاصيل الطلب:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                        const SizedBox(height: 8),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: stop.orderItems.map((item) => Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.grey.shade300)),
+                            child: Text('${item['name']} × ${item['quantity']}', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                          )).toList(),
+                        ),
+                      ] else if (isAdmin) ...[
+                        TextButton.icon(
+                          icon: const Icon(Icons.add_shopping_cart),
+                          label: const Text('إضافة منتجات للطلب'),
+                          onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => ManageOrderScreen(stopId: stop.id, existingItems: stop.orderItems))),
+                        )
+                      ] else ...[
+                        const Text('لا يوجد طلب مسجل', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                      ],
+
+                      const SizedBox(height: 16),
+                      
+                      // زر الإجراء
+                      SizedBox(
+                        width: double.infinity,
+                        height: 45,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isDone ? Colors.grey.shade200 : AppTheme.primary,
+                            foregroundColor: isDone ? Colors.grey.shade700 : Colors.white,
+                          ),
+                          onPressed: isDone ? null : () {
+                            if (isAdmin) {
+                               Navigator.push(context, MaterialPageRoute(builder: (_) => ManageOrderScreen(stopId: stop.id, existingItems: stop.orderItems)));
+                            } else {
+                               Navigator.push(context, MaterialPageRoute(builder: (_) => DriverVisitScreen(stop: stop)));
+                            }
+                          },
+                          child: Text(isAdmin ? 'إدارة الطلب' : (isDone ? 'تمت الزيارة' : 'تسجيل زيارة وتحصيل')),
+                        ),
+                      )
                     ],
                   ),
-                  onTap: () {
-                    if (!isAdmin) {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => DriverVisitScreen(stop: stop)));
-                    }
-                  },
                 ),
               );
             },
           );
         },
       ),
-      floatingActionButton: isAdmin ? FloatingActionButton.extended(
+      floatingActionButton: isAdmin ? FloatingActionButton(
         onPressed: () async {
            final snap = await FirebaseDatabase.instance.ref('route_stops').orderByChild('route_id').equalTo(routeId).get();
            final list = snap.exists ? (snap.value as Map).entries.map((e) => RouteStop.fromMap(e.key, e.value)).toList() : <RouteStop>[];
            if (context.mounted) _showAddCustomerDialog(context, list);
         },
-        icon: const Icon(Icons.person_add),
-        label: const Text('إضافة عميل'),
+        child: const Icon(Icons.person_add),
       ) : null,
     );
   }

@@ -41,6 +41,10 @@ class RouteService {
     await _db.child('daily_routes').child(routeId).update({'is_published': true});
   }
 
+  Future<void> completeRoute(String routeId) async {
+    await _db.child('daily_routes').child(routeId).update({'status': 'completed'});
+  }
+
   Stream<List<RouteStop>> getRouteStops(String routeId) {
     return _db.child('route_stops').orderByChild('route_id').equalTo(routeId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
@@ -57,23 +61,25 @@ class RouteService {
       'customer_id': customer.id,
       'customer_name': customer.name,
       'customer_phone': customer.phone,
+      'customer_address': customer.address,
       'order_index': index,
       'status': 'pending',
       'collected_amount': 0.0,
-      'required_amount': 0.0,
+      'order_items': {},
     });
   }
 
-  // تسجيل تحصيل (للسائق)
+  Future<void> updateOrderItems(String stopId, List<Map<String, dynamic>> items) async {
+    final itemsMap = { for (var item in items) DateTime.now().microsecondsSinceEpoch.toString() + item['productId'] : item };
+    await _db.child('route_stops').child(stopId).update({'order_items': itemsMap});
+  }
+
   Future<void> recordCollection(String stopId, double amount, String status) async {
-    // 1. تحديث حالة الزيارة
     await _db.child('route_stops').child(stopId).update({
       'collected_amount': amount,
       'status': status,
       'updated_at': ServerValue.timestamp,
     });
-    
-    // 2. إضافة سجل تحصيل مستقل (للأرشيف المالي)
     await _db.child('collections').push().set({
       'stop_id': stopId,
       'amount': amount,
