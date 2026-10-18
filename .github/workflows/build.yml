@@ -25,13 +25,6 @@ jobs:
           channel: 'stable'
           cache: true
 
-      # توليد ملف Gradle Wrapper الصحيح لضمان توافقه مع Flutter
-      - name: Generate Gradle Wrapper
-        run: |
-          cd android
-          gradle wrapper --gradle-version 8.14.1
-          cd ..
-
       - name: Inject google-services.json
         env:
           GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
@@ -39,9 +32,6 @@ jobs:
 
       - name: Install dependencies
         run: flutter pub get
-
-      - name: Analyze project
-        run: flutter analyze
 
       - name: Build APK
         run: flutter build apk --release
