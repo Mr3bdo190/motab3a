@@ -1,25 +1,159 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../providers/auth_provider.dart';
-import '../../core/theme/app_colors.dart';
+import '../../core/theme/app_theme.dart';
+import 'products/product_list_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
+
   @override
   Widget build(BuildContext context) {
     final auth = Provider.of<AuthProvider>(context);
+    
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('لوحة المدير'),
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(icon: const Icon(Icons.logout), onPressed: () => auth.logout()),
+      backgroundColor: AppTheme.background,
+      body: CustomScrollView(
+        slivers: [
+          SliverAppBar(
+            expandedHeight: 200,
+            floating: false,
+            pinned: true,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [AppTheme.primary, AppTheme.primaryDark],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('مرحباً بك،', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                                Text(auth.currentUser?.name ?? 'مدير', style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.logout, color: Colors.white),
+                              onPressed: () => auth.logout(),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          SliverPadding(
+            padding: const EdgeInsets.all(20),
+            sliver: SliverGrid(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.1,
+              ),
+              delegate: SliverChildListDelegate([
+                _DashboardCard(
+                  title: 'المنتجات',
+                  icon: FontAwesomeIcons.box,
+                  color: Colors.blue,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProductListScreen())),
+                  delay: 0,
+                ),
+                _DashboardCard(
+                  title: 'العملاء',
+                  icon: FontAwesomeIcons.users,
+                  color: Colors.green,
+                  onTap: () {},
+                  delay: 100,
+                ),
+                _DashboardCard(
+                  title: 'خطوط السير',
+                  icon: FontAwesomeIcons.route,
+                  color: Colors.orange,
+                  onTap: () {},
+                  delay: 200,
+                ),
+                _DashboardCard(
+                  title: 'التحصيلات',
+                  icon: FontAwesomeIcons.moneyBillWave,
+                  color: Colors.red,
+                  onTap: () {},
+                  delay: 300,
+                ),
+              ]),
+            ),
+          ),
         ],
       ),
-      body: Center(
-        child: Text('مرحباً بك يا ${auth.currentUser?.name}', style: const TextStyle(fontSize: 20)),
-      ),
+    );
+  }
+}
+
+class _DashboardCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+  final int delay;
+
+  const _DashboardCard({
+    required this.title,
+    required this.icon,
+    required this.color,
+    required this.onTap,
+    required this.delay,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: FaIcon(icon, color: color, size: 30),
+            ),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark)),
+          ],
+        ),
+      ).animate().fadeIn(delay: delay.ms).scaleXY(begin: 0.8, curve: Curves.easeOutBack),
     );
   }
 }

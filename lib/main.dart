@@ -5,7 +5,7 @@ import 'providers/auth_provider.dart';
 import 'features/auth/login_screen.dart';
 import 'features/admin/admin_dashboard.dart';
 import 'features/driver/driver_home.dart';
-import 'core/theme/app_colors.dart';
+import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,11 +28,7 @@ class Motab3aApp extends StatelessWidget {
     return MaterialApp(
       title: 'متابعة',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        useMaterial3: true,
-        fontFamily: 'Cairo', // سيتم إضافته لاحقاً
-      ),
+      theme: AppTheme.lightTheme,
       home: const Directionality(
         textDirection: TextDirection.rtl,
         child: AuthWrapper(),
