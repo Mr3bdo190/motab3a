@@ -1,10 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:provider/provider.dart';
+import 'providers/auth_provider.dart';
+import 'features/auth/login_screen.dart';
+import 'features/admin/admin_dashboard.dart';
+import 'features/driver/driver_home.dart';
+import 'core/theme/app_colors.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // تهيئة Firebase
-  runApp(const Motab3aApp());
+  await Firebase.initializeApp();
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => AuthProvider()),
+      ],
+      child: const Motab3aApp(),
+    ),
+  );
 }
 
 class Motab3aApp extends StatelessWidget {
@@ -16,29 +29,37 @@ class Motab3aApp extends StatelessWidget {
       title: 'متابعة',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1A73E8)),
+        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
         useMaterial3: true,
+        fontFamily: 'Cairo', // سيتم إضافته لاحقاً
       ),
       home: const Directionality(
         textDirection: TextDirection.rtl,
-        child: Scaffold(
-          body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.local_fire_department, size: 100, color: Color(0xFFFF9800)),
-                SizedBox(height: 20),
-                Text(
-                  'Firebase اتصل بنجاح!',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 10),
-                Text('التطبيق جاهز لبناء النظام 🚀'),
-              ],
-            ),
-          ),
-        ),
+        child: AuthWrapper(),
       ),
     );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthProvider>(context);
+
+    if (authProvider.isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
+    if (authProvider.currentUser == null) {
+      return const LoginScreen();
+    }
+
+    if (authProvider.currentUser!.role == 'admin') {
+      return const AdminDashboard();
+    } else {
+      return const DriverHome();
+    }
   }
 }
