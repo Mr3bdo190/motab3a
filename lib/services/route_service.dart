@@ -45,6 +45,21 @@ class RouteService {
     await _db.child('daily_routes').child(routeId).update({'status': 'completed'});
   }
 
+  // دالة حذف خط السير وكل العملاء اللي فيه
+  Future<void> deleteRoute(String routeId) async {
+    // 1. حذف خط السير نفسه
+    await _db.child('daily_routes').child(routeId).remove();
+    
+    // 2. البحث عن كل العملاء المرتبطين بالخط ده وحذفهم
+    final stopsSnap = await _db.child('route_stops').orderByChild('route_id').equalTo(routeId).get();
+    if (stopsSnap.exists) {
+      final data = stopsSnap.value as Map;
+      for (var key in data.keys) {
+        await _db.child('route_stops').child(key).remove();
+      }
+    }
+  }
+
   Stream<List<RouteStop>> getRouteStops(String routeId) {
     return _db.child('route_stops').orderByChild('route_id').equalTo(routeId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;

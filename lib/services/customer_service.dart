@@ -19,6 +19,13 @@ class CustomerService {
     });
   }
 
+  Future<void> updateCustomer(Customer customer) async {
+    await _db.child(customer.id).update({
+      ...customer.toMap(),
+      'updated_at': ServerValue.timestamp,
+    });
+  }
+
   Future<void> deleteCustomer(String id) async {
     await _db.child(id).remove();
   }

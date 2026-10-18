@@ -13,12 +13,12 @@ class ProductListScreen extends StatefulWidget {
 class _ProductListScreenState extends State<ProductListScreen> {
   final ProductService _productService = ProductService();
 
-  void _showAddProductSheet() {
+  void _showAddProductSheet([Product? product]) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const AddProductSheet(),
+      builder: (context) => AddProductSheet(product: product),
     );
   }
 
@@ -48,7 +48,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inbox, size: 80, color: Colors.grey.shade400),
+                  Icon(Icons.inventory_2_outlined, size: 80, color: Colors.grey.shade400),
                   const SizedBox(height: 16),
                   Text('لا يوجد منتجات حتى الآن', style: TextStyle(color: Colors.grey.shade600, fontSize: 18)),
                 ],
@@ -78,6 +78,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   margin: const EdgeInsets.only(bottom: 12),
                   child: ListTile(
+                    onTap: () => _showAddProductSheet(product), // التعديل
                     contentPadding: const EdgeInsets.all(16),
                     leading: Container(
                       padding: const EdgeInsets.all(12),
@@ -116,7 +117,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
         },
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddProductSheet,
+        onPressed: () => _showAddProductSheet(),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('إضافة منتج', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -126,7 +127,8 @@ class _ProductListScreenState extends State<ProductListScreen> {
 }
 
 class AddProductSheet extends StatefulWidget {
-  const AddProductSheet({super.key});
+  final Product? product;
+  const AddProductSheet({super.key, this.product});
   @override
   State<AddProductSheet> createState() => _AddProductSheetState();
 }
@@ -139,20 +141,36 @@ class _AddProductSheetState extends State<AddProductSheet> {
   String _selectedUnit = 'قطعة';
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.product != null) {
+      _nameController.text = widget.product!.name;
+      _codeController.text = widget.product!.code;
+      _priceController.text = widget.product!.price.toString();
+      _selectedUnit = widget.product!.unit;
+    }
+  }
+
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     
     final product = Product(
-      id: '',
+      id: widget.product?.id ?? '',
       name: _nameController.text.trim(),
       code: _codeController.text.trim(),
       unit: _selectedUnit,
       price: double.parse(_priceController.text.trim()),
-      isActive: true,
+      isActive: widget.product?.isActive ?? true,
     );
 
-    await ProductService().addProduct(product);
+    if (widget.product == null) {
+      await ProductService().addProduct(product);
+    } else {
+      await ProductService().updateProduct(product);
+    }
+    
     if (mounted) Navigator.pop(context);
   }
 
@@ -174,7 +192,7 @@ class _AddProductSheetState extends State<AddProductSheet> {
             children: [
               Center(child: Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)))),
               const SizedBox(height: 20),
-              const Text('إضافة منتج جديد', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+              Text(widget.product == null ? 'إضافة منتج جديد' : 'تعديل المنتج', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
               const SizedBox(height: 20),
               TextFormField(
                 controller: _nameController,
@@ -204,7 +222,7 @@ class _AddProductSheetState extends State<AddProductSheet> {
               const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: _isLoading ? null : _save,
-                child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('حفظ المنتج'),
+                child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text(widget.product == null ? 'حفظ المنتج' : 'حفظ التعديلات'),
               ),
             ],
           ),

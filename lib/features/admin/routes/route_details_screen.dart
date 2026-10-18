@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // عشان الاهتزاز
 import 'package:firebase_database/firebase_database.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
@@ -65,7 +66,10 @@ class RouteDetailsScreen extends StatelessWidget {
               icon: const Icon(Icons.publish, color: Colors.white),
               onPressed: () async {
                 await RouteService().publishRoute(routeId);
-                if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النشر! السائق سيراه الآن'), backgroundColor: AppTheme.success));
+                if (context.mounted) {
+                  HapticFeedback.lightImpact();
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم النشر! السائق سيراه الآن'), backgroundColor: AppTheme.success));
+                }
               },
             ),
           if (!isAdmin)
@@ -73,7 +77,28 @@ class RouteDetailsScreen extends StatelessWidget {
               icon: const Icon(Icons.check_circle, color: Colors.white),
               tooltip: 'إنهاء خط السير',
               onPressed: () async {
+                // التحقق من وجود عملاء لم تتم زيارتهم
+                final snapshot = await FirebaseDatabase.instance.ref('route_stops').orderByChild('route_id').equalTo(routeId).get();
+                if (snapshot.exists) {
+                  final data = snapshot.value as Map;
+                  int pendingCount = 0;
+                  for (var stop in data.values) {
+                    if (stop['status'] == 'pending') pendingCount++;
+                  }
+                  
+                  if (pendingCount > 0) {
+                    HapticFeedback.heavyImpact(); // اهتزاز تنبيه
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('لا يمكن إنهاء الخط! متبقي $pendingCount عميل لم يتم زيارته.'), backgroundColor: AppTheme.danger)
+                      );
+                    }
+                    return;
+                  }
+                }
+
                 await RouteService().completeRoute(routeId);
+                HapticFeedback.mediumImpact();
                 if (context.mounted) Navigator.pop(context);
               },
             )
@@ -103,7 +128,6 @@ class RouteDetailsScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // رأس الكارت: الاسم والاتصال
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -132,13 +156,15 @@ class RouteDetailsScreen extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.phone, color: Colors.white),
                             style: IconButton.styleFrom(backgroundColor: AppTheme.success),
-                            onPressed: () => launchUrl(Uri.parse('tel:${stop.customerPhone}')),
+                            onPressed: () {
+                              HapticFeedback.selectionClick(); // اهتزاز خفيف عند الاتصال
+                              launchUrl(Uri.parse('tel:${stop.customerPhone}'));
+                            },
                           )
                         ],
                       ),
                       const Divider(height: 24),
                       
-                      // تفاصيل الطلب
                       if (stop.orderItems.isNotEmpty) ...[
                         const Text('تفاصيل الطلب:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                         const SizedBox(height: 8),
@@ -163,7 +189,6 @@ class RouteDetailsScreen extends StatelessWidget {
 
                       const SizedBox(height: 16),
                       
-                      // زر الإجراء
                       SizedBox(
                         width: double.infinity,
                         height: 45,

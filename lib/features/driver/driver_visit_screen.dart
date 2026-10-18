@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // عشان الاهتزاز
 import '../../core/theme/app_theme.dart';
 import '../../models/route_stop.dart';
 import '../../services/route_service.dart';
@@ -21,6 +22,7 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
     final amount = double.tryParse(amountStr) ?? 0.0;
 
     if (amount < 0) {
+      HapticFeedback.vibrate(); // اهتزاز رفض
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('المبلغ لا يمكن أن يكون سالباً'), backgroundColor: AppTheme.danger));
       return;
     }
@@ -29,11 +31,18 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
 
     try {
       await RouteService().recordCollection(widget.stop.id, amount, _selectedStatus);
+      
+      // اهتزاز نجاح (نمط اهتزاز خاص)
+      HapticFeedback.mediumImpact();
+      await Future.delayed(const Duration(milliseconds: 100));
+      HapticFeedback.lightImpact();
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل التحصيل بنجاح'), backgroundColor: AppTheme.success));
         Navigator.pop(context);
       }
     } catch (e) {
+      HapticFeedback.heavyImpact(); // اهتزاز خطأ قوي
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: AppTheme.danger));
         setState(() => _isLoading = false);

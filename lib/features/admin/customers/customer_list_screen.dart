@@ -14,12 +14,12 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
   final CustomerService _customerService = CustomerService();
   String _searchQuery = '';
 
-  void _showAddCustomerSheet() {
+  void _showAddCustomerSheet([Customer? customer]) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => const AddCustomerSheet(),
+      builder: (context) => AddCustomerSheet(customer: customer),
     );
   }
 
@@ -40,7 +40,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
       ),
       body: Column(
         children: [
-          // شريط البحث
           Padding(
             padding: const EdgeInsets.all(16),
             child: TextField(
@@ -58,7 +57,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
               ),
             ).animate().fadeIn().slideY(begin: -0.2),
           ),
-          
           Expanded(
             child: StreamBuilder<List<Customer>>(
               stream: _customerService.getCustomers(),
@@ -66,7 +64,6 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
                 }
-                
                 var customers = snapshot.data ?? [];
                 if (_searchQuery.isNotEmpty) {
                   customers = customers.where((c) => 
@@ -110,6 +107,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         margin: const EdgeInsets.only(bottom: 12),
                         child: ListTile(
+                          onTap: () => _showAddCustomerSheet(customer), // التعديل
                           contentPadding: const EdgeInsets.all(16),
                           leading: CircleAvatar(
                             backgroundColor: AppTheme.primary.withOpacity(0.1),
@@ -125,7 +123,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
                                 Text('📍 ${customer.area}', style: const TextStyle(color: AppTheme.textLight)),
                             ],
                           ),
-                          trailing: const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+                          trailing: const Icon(Icons.edit, size: 16, color: Colors.grey),
                         ),
                       ).animate().fadeIn(delay: (index * 50).ms).slideX(begin: 0.1),
                     );
@@ -137,7 +135,7 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _showAddCustomerSheet,
+        onPressed: () => _showAddCustomerSheet(),
         backgroundColor: AppTheme.primary,
         icon: const Icon(Icons.add, color: Colors.white),
         label: const Text('إضافة عميل', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
@@ -147,7 +145,8 @@ class _CustomerListScreenState extends State<CustomerListScreen> {
 }
 
 class AddCustomerSheet extends StatefulWidget {
-  const AddCustomerSheet({super.key});
+  final Customer? customer;
+  const AddCustomerSheet({super.key, this.customer});
   @override
   State<AddCustomerSheet> createState() => _AddCustomerSheetState();
 }
@@ -161,21 +160,38 @@ class _AddCustomerSheetState extends State<AddCustomerSheet> {
   final _addressController = TextEditingController();
   bool _isLoading = false;
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.customer != null) {
+      _nameController.text = widget.customer!.name;
+      _codeController.text = widget.customer!.code;
+      _phoneController.text = widget.customer!.phone;
+      _areaController.text = widget.customer!.area;
+      _addressController.text = widget.customer!.address;
+    }
+  }
+
   void _save() async {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
     
     final customer = Customer(
-      id: '',
+      id: widget.customer?.id ?? '',
       name: _nameController.text.trim(),
       code: _codeController.text.trim(),
       phone: _phoneController.text.trim(),
       area: _areaController.text.trim(),
       address: _addressController.text.trim(),
-      isActive: true,
+      isActive: widget.customer?.isActive ?? true,
     );
 
-    await CustomerService().addCustomer(customer);
+    if (widget.customer == null) {
+      await CustomerService().addCustomer(customer);
+    } else {
+      await CustomerService().updateCustomer(customer);
+    }
+    
     if (mounted) Navigator.pop(context);
   }
 
@@ -198,7 +214,7 @@ class _AddCustomerSheetState extends State<AddCustomerSheet> {
               children: [
                 Center(child: Container(width: 50, height: 5, decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(10)))),
                 const SizedBox(height: 20),
-                const Text('إضافة عميل جديد', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                Text(widget.customer == null ? 'إضافة عميل جديد' : 'تعديل بيانات العميل', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                 const SizedBox(height: 20),
                 TextFormField(
                   controller: _nameController,
@@ -239,7 +255,7 @@ class _AddCustomerSheetState extends State<AddCustomerSheet> {
                 const SizedBox(height: 24),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _save,
-                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('حفظ العميل'),
+                  child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : Text(widget.customer == null ? 'حفظ العميل' : 'حفظ التعديلات'),
                 ),
               ],
             ),

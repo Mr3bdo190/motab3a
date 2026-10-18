@@ -19,6 +19,13 @@ class ProductService {
     });
   }
 
+  Future<void> updateProduct(Product product) async {
+    await _db.child(product.id).update({
+      ...product.toMap(),
+      'updated_at': ServerValue.timestamp,
+    });
+  }
+
   Future<void> deleteProduct(String id) async {
     await _db.child(id).remove();
   }

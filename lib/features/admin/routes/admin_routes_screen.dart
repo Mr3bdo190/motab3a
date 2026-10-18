@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:provider/provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/daily_route.dart';
 import '../../../services/route_service.dart';
@@ -35,21 +34,45 @@ class AdminRoutesScreen extends StatelessWidget {
             itemCount: routes.length,
             itemBuilder: (context, index) {
               final route = routes[index];
-              return Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                margin: const EdgeInsets.only(bottom: 12),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.all(16),
-                  leading: CircleAvatar(
-                    backgroundColor: route.isPublished ? AppTheme.success.withOpacity(0.1) : AppTheme.warning.withOpacity(0.1),
-                    child: Icon(Icons.route, color: route.isPublished ? AppTheme.success : AppTheme.warning),
-                  ),
-                  title: Text('تاريخ: ${route.date}', style: const TextStyle(fontWeight: FontWeight.bold)),
-                  subtitle: Text('السائق: ${route.driverName}\nالحالة: ${route.isPublished ? "منشور" : "مسودة"}'),
-                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RouteDetailsScreen(routeId: route.id, isAdmin: true))),
+              return Dismissible(
+                key: Key(route.id),
+                direction: DismissDirection.endToStart,
+                background: Container(
+                  alignment: Alignment.centerLeft,
+                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(color: AppTheme.danger, borderRadius: BorderRadius.circular(16)),
+                  child: const Icon(Icons.delete_forever, color: Colors.white, size: 30),
                 ),
-              ).animate().fadeIn(delay: (index * 50).ms).slideX();
+                confirmDismiss: (direction) async {
+                  return await showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                      title: const Text('حذف خط السير'),
+                      content: const Text('هل أنت متأكد؟ سيتم حذف الخط وكل العملاء المرتبطين به نهائياً.'),
+                      actions: [
+                        TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('إلغاء')),
+                        TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('حذف', style: TextStyle(color: AppTheme.danger))),
+                      ],
+                    ),
+                  );
+                },
+                onDismissed: (_) => routeService.deleteRoute(route.id),
+                child: Card(
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  child: ListTile(
+                    contentPadding: const EdgeInsets.all(16),
+                    leading: CircleAvatar(
+                      backgroundColor: route.isPublished ? AppTheme.success.withOpacity(0.1) : AppTheme.warning.withOpacity(0.1),
+                      child: Icon(Icons.route, color: route.isPublished ? AppTheme.success : AppTheme.warning),
+                    ),
+                    title: Text('تاريخ: ${route.date}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                    subtitle: Text('السائق: ${route.driverName}\nالحالة: ${route.isPublished ? "منشور" : "مسودة"}'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => RouteDetailsScreen(routeId: route.id, isAdmin: true))),
+                  ),
+                ).animate().fadeIn(delay: (index * 50).ms).slideX(),
+              );
             },
           );
         },
