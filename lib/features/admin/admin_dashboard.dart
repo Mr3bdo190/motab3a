@@ -4,7 +4,8 @@ import 'package:provider/provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'products/product_list_screen.dart';
-import 'customers/customer_list_screen.dart'; // ضفنا الاستدعاء ده
+import 'customers/customer_list_screen.dart';
+import 'routes/admin_routes_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -81,14 +82,14 @@ class AdminDashboard extends StatelessWidget {
                   title: 'العملاء',
                   icon: Icons.people,
                   color: Colors.green,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerListScreen())), // هنا الربط
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerListScreen())),
                   delay: 100,
                 ),
                 _DashboardCard(
                   title: 'خطوط السير',
                   icon: Icons.route,
                   color: Colors.orange,
-                  onTap: () {},
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminRoutesScreen())),
                   delay: 200,
                 ),
                 _DashboardCard(
@@ -114,13 +115,7 @@ class _DashboardCard extends StatelessWidget {
   final VoidCallback onTap;
   final int delay;
 
-  const _DashboardCard({
-    required this.title,
-    required this.icon,
-    required this.color,
-    required this.onTap,
-    required this.delay,
-  });
+  const _DashboardCard({required this.title, required this.icon, required this.color, required this.onTap, required this.delay});
 
   @override
   Widget build(BuildContext context) {
@@ -130,23 +125,14 @@ class _DashboardCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: color.withOpacity(0.1),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
+          boxShadow: [BoxShadow(color: color.withOpacity(0.1), blurRadius: 20, offset: const Offset(0, 10))],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
+              decoration: BoxDecoration(color: color.withOpacity(0.1), shape: BoxShape.circle),
               child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 12),
