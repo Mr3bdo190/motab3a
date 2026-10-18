@@ -16,7 +16,6 @@ dependencies:
   firebase_database: ^10.4.0
   google_fonts: ^6.1.0
   flutter_animate: ^4.5.0
-  font_awesome_flutter: ^10.7.0
 
 dev_dependencies:
   flutter_test:

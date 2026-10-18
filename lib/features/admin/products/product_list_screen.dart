@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../models/product.dart';
 import '../../../services/product_service.dart';
@@ -49,7 +48,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  FaIcon(FontAwesomeIcons.boxOpen, size: 80, color: Colors.grey.shade400),
+                  Icon(Icons.inbox, size: 80, color: Colors.grey.shade400),
                   const SizedBox(height: 16),
                   Text('لا يوجد منتجات حتى الآن', style: TextStyle(color: Colors.grey.shade600, fontSize: 18)),
                 ],
@@ -86,7 +85,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
                         color: AppTheme.primary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
-                      child: const FaIcon(FontAwesomeIcons.box, color: AppTheme.primary),
+                      child: const Icon(Icons.inventory_2, color: AppTheme.primary),
                     ),
                     title: Text(product.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                     subtitle: Text('${product.code} • ${product.unit}'),

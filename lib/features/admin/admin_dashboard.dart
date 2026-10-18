@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../../providers/auth_provider.dart';
 import '../../core/theme/app_theme.dart';
 import 'products/product_list_screen.dart';
@@ -72,28 +71,28 @@ class AdminDashboard extends StatelessWidget {
               delegate: SliverChildListDelegate([
                 _DashboardCard(
                   title: 'المنتجات',
-                  icon: FontAwesomeIcons.box,
+                  icon: Icons.inventory_2,
                   color: Colors.blue,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ProductListScreen())),
                   delay: 0,
                 ),
                 _DashboardCard(
                   title: 'العملاء',
-                  icon: FontAwesomeIcons.users,
+                  icon: Icons.people,
                   color: Colors.green,
                   onTap: () {},
                   delay: 100,
                 ),
                 _DashboardCard(
                   title: 'خطوط السير',
-                  icon: FontAwesomeIcons.route,
+                  icon: Icons.route,
                   color: Colors.orange,
                   onTap: () {},
                   delay: 200,
                 ),
                 _DashboardCard(
                   title: 'التحصيلات',
-                  icon: FontAwesomeIcons.moneyBillWave,
+                  icon: Icons.account_balance_wallet,
                   color: Colors.red,
                   onTap: () {},
                   delay: 300,
@@ -147,7 +146,7 @@ class _DashboardCard extends StatelessWidget {
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: FaIcon(icon, color: color, size: 30),
+              child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 12),
             Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.textDark)),
