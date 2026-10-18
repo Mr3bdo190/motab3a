@@ -6,7 +6,7 @@ plugins {
 }
 android {
     namespace = "com.motab3a.mr"
-    compileSdk = 34
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -19,7 +19,7 @@ android {
     defaultConfig {
         applicationId = "com.motab3a.mr"
         minSdk = 23
-        targetSdk = 34
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
