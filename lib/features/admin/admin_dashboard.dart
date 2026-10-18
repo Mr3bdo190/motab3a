@@ -6,6 +6,8 @@ import '../../core/theme/app_theme.dart';
 import 'products/product_list_screen.dart';
 import 'customers/customer_list_screen.dart';
 import 'routes/admin_routes_screen.dart';
+import 'collections/admin_collections_screen.dart';
+import 'users/admin_users_screen.dart';
 
 class AdminDashboard extends StatelessWidget {
   const AdminDashboard({super.key});
@@ -96,8 +98,15 @@ class AdminDashboard extends StatelessWidget {
                   title: 'التحصيلات',
                   icon: Icons.account_balance_wallet,
                   color: Colors.red,
-                  onTap: () {},
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminCollectionsScreen())),
                   delay: 300,
+                ),
+                _DashboardCard(
+                  title: 'إدارة السائقين',
+                  icon: Icons.manage_accounts,
+                  color: Colors.purple,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const AdminUsersScreen())),
+                  delay: 400,
                 ),
               ]),
             ),
