@@ -8,6 +8,10 @@ class AppTheme {
   static const Color danger = Color(0xFFE53935);
   static const Color warning = Color(0xFFFF9800);
   
+  // رجعنا الألوان دي تاني
+  static const Color textDark = Color(0xFF202124);
+  static const Color textLight = Color(0xFF5F6368);
+  
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,

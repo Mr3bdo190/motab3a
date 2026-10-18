@@ -14,9 +14,14 @@ class _OfflineBannerState extends State<OfflineBanner> {
   @override
   void initState() {
     super.initState();
-    Connectivity().onConnectivityChanged.listen((List<ConnectivityResult> results) {
+    // في النسخ الجديدة من المكتبة بيرجع List، بنعالج الحالتين
+    Connectivity().onConnectivityChanged.listen((dynamic result) {
       setState(() {
-        _isOffline = results.contains(ConnectivityResult.none);
+        if (result is List<ConnectivityResult>) {
+          _isOffline = result.contains(ConnectivityResult.none);
+        } else if (result is ConnectivityResult) {
+          _isOffline = result == ConnectivityResult.none;
+        }
       });
     });
   }
@@ -33,7 +38,11 @@ class _OfflineBannerState extends State<OfflineBanner> {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(8),
-                child: const Text('أنت غير متصل بالإنترنت - التغييرات يتم حفظها محلياً', textAlign: TextAlign.center, style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'أنت غير متصل بالإنترنت - التغييرات يتم حفظها محلياً', 
+                  textAlign: TextAlign.center, 
+                  style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)
+                ),
               ),
             ),
           ),
