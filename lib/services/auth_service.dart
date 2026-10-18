@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_database/firebase_database.dart';
 import '../models/app_user.dart';
+import '../core/utils/error_handler.dart';
 
 class AuthService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -19,10 +20,7 @@ class AuthService {
   Future<String?> login(String phone, String password) async {
     try {
       String email = phone.contains('@') ? phone : '$phone@app.local';
-      UserCredential result = await _auth.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
+      UserCredential result = await _auth.signInWithEmailAndPassword(email: email, password: password);
       
       if (result.user != null) {
         AppUser? user = await getUserData(result.user!.uid);
@@ -35,14 +33,25 @@ class AuthService {
           return 'هذا الحساب معطل، تواصل مع المدير';
         }
       }
-      return null; // Null means success
-    } on FirebaseAuthException catch (e) {
-      if (e.code == 'user-not-found' || e.code == 'wrong-password' || e.code == 'invalid-credential') {
-        return 'رقم الهاتف أو كلمة المرور غير صحيحة';
-      }
-      return e.message;
+      return null;
     } catch (e) {
-      return 'حدث خطأ غير متوقع';
+      return ErrorHandler.getMessage(e);
+    }
+  }
+
+  Future<String?> changePassword(String oldPassword, String newPassword) async {
+    try {
+      User? user = _auth.currentUser;
+      if (user == null || user.email == null) return 'لا يوجد مستخدم مسجل';
+      
+      // إعادة المصادقة قبل تغيير الباسورد
+      AuthCredential credential = EmailAuthProvider.credential(email: user.email!, password: oldPassword);
+      await user.reauthenticateWithCredential(credential);
+      
+      await user.updatePassword(newPassword);
+      return null;
+    } catch (e) {
+      return ErrorHandler.getMessage(e);
     }
   }
 

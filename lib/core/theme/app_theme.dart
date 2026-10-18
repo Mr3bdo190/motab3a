@@ -7,59 +7,51 @@ class AppTheme {
   static const Color success = Color(0xFF0F9D58);
   static const Color danger = Color(0xFFE53935);
   static const Color warning = Color(0xFFFF9800);
-  static const Color background = Color(0xFFF5F7FA);
-  static const Color cardColor = Colors.white;
-  static const Color textDark = Color(0xFF202124);
-  static const Color textLight = Color(0xFF5F6368);
-
+  
   static ThemeData get lightTheme {
     return ThemeData(
       useMaterial3: true,
+      brightness: Brightness.light,
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primary,
-        primary: primary,
-        background: background,
-        error: danger,
+        seedColor: primary, primary: primary, background: const Color(0xFFF5F7FA), error: danger,
       ),
-      textTheme: GoogleFonts.cairoTextTheme(),
-      scaffoldBackgroundColor: background,
+      textTheme: GoogleFonts.cairoTextTheme(ThemeData.light().textTheme),
+      scaffoldBackgroundColor: const Color(0xFFF5F7FA),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        centerTitle: true,
+        backgroundColor: Colors.transparent, elevation: 0, centerTitle: true,
         iconTheme: const IconThemeData(color: Colors.white),
-        titleTextStyle: GoogleFonts.cairo(
-          fontSize: 20,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
-        ),
-      ),
-      elevatedButtonTheme: ElevatedButtonThemeData(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: primary,
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          padding: const EdgeInsets.symmetric(vertical: 14),
-          textStyle: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.bold),
-        ),
+        titleTextStyle: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
       ),
       inputDecorationTheme: InputDecorationTheme(
-        filled: true,
-        fillColor: Colors.white,
+        filled: true, fillColor: Colors.white,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey.shade300),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: primary, width: 2),
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primary, width: 2)),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      brightness: Brightness.dark,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: primary, primary: primary, background: const Color(0xFF121212), surface: const Color(0xFF1E1E1E), error: danger,
+      ),
+      textTheme: GoogleFonts.cairoTextTheme(ThemeData.dark().textTheme),
+      scaffoldBackgroundColor: const Color(0xFF121212),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF1E1E1E), elevation: 0, centerTitle: true,
+        iconTheme: const IconThemeData(color: Colors.white),
+        titleTextStyle: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+      ),
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true, fillColor: const Color(0xFF2C2C2C),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: primary, width: 2)),
       ),
     );
   }

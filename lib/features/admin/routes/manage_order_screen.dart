@@ -27,9 +27,7 @@ class _ManageOrderScreenState extends State<ManageOrderScreen> {
     final snap = await FirebaseDatabase.instance.ref('products').get();
     if (snap.exists) {
       final data = snap.value as Map;
-      for(var e in data.entries) {
-        _products[e.key] = e.value;
-      }
+      for(var e in data.entries) { _products[e.key] = e.value; }
     }
     setState(() => _isLoading = false);
   }
@@ -56,14 +54,24 @@ class _ManageOrderScreenState extends State<ManageOrderScreen> {
   }
 
   void _save() async {
-    // استدعاء مباشر بدون RouteService عشان نسهل الكود
+    double totalRequired = 0;
+    for (var item in _items) {
+      totalRequired += (item['price'] as double) * (item['quantity'] as int);
+    }
+
     final itemsMap = { for (var item in _items) DateTime.now().microsecondsSinceEpoch.toString() + item['productId'].toString() : item };
-    await FirebaseDatabase.instance.ref('route_stops').child(widget.stopId).update({'order_items': itemsMap});
+    await FirebaseDatabase.instance.ref('route_stops').child(widget.stopId).update({
+      'order_items': itemsMap,
+      'required_amount': totalRequired,
+    });
     if (mounted) Navigator.pop(context);
   }
 
   @override
   Widget build(BuildContext context) {
+    double currentTotal = 0;
+    for (var item in _items) { currentTotal += (item['price'] as double) * (item['quantity'] as int); }
+
     return Scaffold(
       appBar: AppBar(title: const Text('تفاصيل الطلب')),
       body: _isLoading ? const Center(child: CircularProgressIndicator()) : Column(
@@ -79,10 +87,7 @@ class _ManageOrderScreenState extends State<ManageOrderScreen> {
                   child: ListTile(
                     title: Text(e.value['name']),
                     subtitle: Text('${e.value['price']} ج.م'),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.add_circle, color: AppTheme.success),
-                      onPressed: () => _addProduct(e.key, e.value['name'], (e.value['price']).toDouble()),
-                    ),
+                    trailing: IconButton(icon: const Icon(Icons.add_circle, color: AppTheme.success), onPressed: () => _addProduct(e.key, e.value['name'], (e.value['price']).toDouble())),
                   ),
                 ))
               ],
@@ -93,7 +98,10 @@ class _ManageOrderScreenState extends State<ManageOrderScreen> {
             flex: 3,
             child: Column(
               children: [
-                const Padding(padding: EdgeInsets.all(8), child: Text('الطلب الحالي:', style: TextStyle(fontWeight: FontWeight.bold))),
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Text('الطلب الحالي (الإجمالي: $currentTotal ج.م):', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppTheme.success)),
+                ),
                 Expanded(
                   child: ListView.builder(
                     itemCount: _items.length,
@@ -115,11 +123,7 @@ class _ManageOrderScreenState extends State<ManageOrderScreen> {
                 ),
                 Padding(
                   padding: const EdgeInsets.all(16),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(onPressed: _save, child: const Text('حفظ الطلب')),
-                  ),
+                  child: SizedBox(width: double.infinity, height: 50, child: ElevatedButton(onPressed: _save, child: const Text('حفظ الطلب'))),
                 )
               ],
             ),

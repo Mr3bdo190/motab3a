@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'; // عشان الاهتزاز
+import 'package:flutter/services.dart';
 import '../../core/theme/app_theme.dart';
 import '../../models/route_stop.dart';
 import '../../services/route_service.dart';
@@ -22,27 +22,23 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
     final amount = double.tryParse(amountStr) ?? 0.0;
 
     if (amount < 0) {
-      HapticFeedback.vibrate(); // اهتزاز رفض
+      HapticFeedback.vibrate();
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('المبلغ لا يمكن أن يكون سالباً'), backgroundColor: AppTheme.danger));
       return;
     }
 
     setState(() => _isLoading = true);
-
     try {
-      await RouteService().recordCollection(widget.stop.id, amount, _selectedStatus);
-      
-      // اهتزاز نجاح (نمط اهتزاز خاص)
+      await RouteService().recordCollection(widget.stop, amount, _selectedStatus);
       HapticFeedback.mediumImpact();
       await Future.delayed(const Duration(milliseconds: 100));
       HapticFeedback.lightImpact();
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('تم تسجيل التحصيل بنجاح'), backgroundColor: AppTheme.success));
         Navigator.pop(context);
       }
     } catch (e) {
-      HapticFeedback.heavyImpact(); // اهتزاز خطأ قوي
+      HapticFeedback.heavyImpact();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('خطأ: $e'), backgroundColor: AppTheme.danger));
         setState(() => _isLoading = false);
@@ -73,11 +69,12 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
                     const SizedBox(height: 8),
                     Text('📞 ${widget.stop.customerPhone}', style: const TextStyle(fontSize: 16, color: AppTheme.textLight)),
                     const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                      decoration: BoxDecoration(color: AppTheme.warning.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                      child: Text('الحالة: ${widget.stop.status == 'pending' ? 'لم تبدأ' : 'تمت الزيارة'}', style: const TextStyle(color: AppTheme.warning, fontWeight: FontWeight.bold)),
-                    )
+                    if (widget.stop.requiredAmount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(color: AppTheme.success.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                        child: Text('المطلوب: ${widget.stop.requiredAmount} ج.م', style: const TextStyle(color: AppTheme.success, fontWeight: FontWeight.bold, fontSize: 16)),
+                      ),
                   ],
                 ),
               ),
@@ -89,11 +86,12 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
               const SizedBox(height: 16),
               TextField(
                 controller: _amountController,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
+                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'^\d+\.?\d{0,2}'))],
+                decoration: InputDecoration(
                   labelText: 'المبلغ المحصل (ج.م)',
-                  prefixIcon: Icon(Icons.money),
-                  hintText: '0.00',
+                  prefixIcon: const Icon(Icons.money),
+                  hintText: widget.stop.requiredAmount > 0 ? widget.stop.requiredAmount.toString() : '0.00',
                 ),
               ),
               const SizedBox(height: 16),
@@ -108,25 +106,9 @@ class _DriverVisitScreenState extends State<DriverVisitScreen> {
                 onChanged: (val) => setState(() => _selectedStatus = val!),
               ),
               const SizedBox(height: 32),
-              SizedBox(
-                height: 55,
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _submit,
-                  child: _isLoading 
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : const Text('تأكيد التحصيل', style: TextStyle(fontSize: 18)),
-                ),
-              ),
+              SizedBox(height: 55, child: ElevatedButton(onPressed: _isLoading ? null : _submit, child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('تأكيد التحصيل', style: TextStyle(fontSize: 18)))),
             ] else ...[
-              const Center(
-                child: Column(
-                  children: [
-                    Icon(Icons.check_circle, size: 80, color: AppTheme.success),
-                    SizedBox(height: 16),
-                    Text('تمت هذه الزيارة بالفعل', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.success)),
-                  ],
-                ),
-              )
+              const Center(child: Column(children: [Icon(Icons.check_circle, size: 80, color: AppTheme.success), SizedBox(height: 16), Text('تمت هذه الزيارة بالفعل', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppTheme.success))])),
             ]
           ],
         ),

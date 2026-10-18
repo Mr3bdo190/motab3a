@@ -45,12 +45,8 @@ class RouteService {
     await _db.child('daily_routes').child(routeId).update({'status': 'completed'});
   }
 
-  // دالة حذف خط السير وكل العملاء اللي فيه
   Future<void> deleteRoute(String routeId) async {
-    // 1. حذف خط السير نفسه
     await _db.child('daily_routes').child(routeId).remove();
-    
-    // 2. البحث عن كل العملاء المرتبطين بالخط ده وحذفهم
     final stopsSnap = await _db.child('route_stops').orderByChild('route_id').equalTo(routeId).get();
     if (stopsSnap.exists) {
       final data = stopsSnap.value as Map;
@@ -89,14 +85,19 @@ class RouteService {
     await _db.child('route_stops').child(stopId).update({'order_items': itemsMap});
   }
 
-  Future<void> recordCollection(String stopId, double amount, String status) async {
-    await _db.child('route_stops').child(stopId).update({
+  // هنا التعديل المهم: بناخد بيانات العميل ونحفظها في التحصيل
+  Future<void> recordCollection(RouteStop stop, double amount, String status) async {
+    await _db.child('route_stops').child(stop.id).update({
       'collected_amount': amount,
       'status': status,
       'updated_at': ServerValue.timestamp,
     });
+    
     await _db.child('collections').push().set({
-      'stop_id': stopId,
+      'stop_id': stop.id,
+      'customer_name': stop.customerName, // حفظنا الاسم
+      'customer_phone': stop.customerPhone, // حفظنا الرقم
+      'customer_address': stop.customerAddress, // حفظنا العنوان
       'amount': amount,
       'timestamp': ServerValue.timestamp,
     });

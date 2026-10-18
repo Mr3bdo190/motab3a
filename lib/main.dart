@@ -8,19 +8,16 @@ import 'features/admin/admin_dashboard.dart';
 import 'features/driver/driver_home.dart';
 import 'core/theme/app_theme.dart';
 import 'features/shared/splash_screen.dart';
+import 'shared/widgets/offline_banner.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  
-  // تفعيل الحفظ المحلي (عشان لو النت قطع التطبيق يفضل شغال)
   FirebaseDatabase.instance.setPersistenceEnabled(true);
 
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => AuthProvider())],
       child: const Motab3aApp(),
     ),
   );
@@ -35,10 +32,10 @@ class Motab3aApp extends StatelessWidget {
       title: 'متابعة',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const Directionality(
-        textDirection: TextDirection.rtl,
-        child: SplashScreen(), // شاشة البداية
-      ),
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system,
+      builder: (context, child) => OfflineBanner(child: child!),
+      home: const Directionality(textDirection: TextDirection.rtl, child: SplashScreen()),
     );
   }
 }
@@ -49,19 +46,9 @@ class AuthWrapper extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-
-    if (authProvider.isLoading) {
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
-    }
-
-    if (authProvider.currentUser == null) {
-      return const LoginScreen();
-    }
-
-    if (authProvider.currentUser!.role == 'admin') {
-      return const AdminDashboard();
-    } else {
-      return const DriverHome();
-    }
+    if (authProvider.isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    if (authProvider.currentUser == null) return const LoginScreen();
+    if (authProvider.currentUser!.role == 'admin') return const AdminDashboard();
+    return const DriverHome();
   }
 }

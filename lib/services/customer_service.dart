@@ -5,7 +5,8 @@ class CustomerService {
   final DatabaseReference _db = FirebaseDatabase.instance.ref().child('customers');
 
   Stream<List<Customer>> getCustomers() {
-    return _db.onValue.map((event) {
+    // بنجيب آخر 200 عميل بس عشان الأداء
+    return _db.limitToLast(200).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return [];
       return data.entries.map((e) => Customer.fromMap(e.key.toString(), e.value as Map<dynamic, dynamic>)).toList();
@@ -13,17 +14,11 @@ class CustomerService {
   }
 
   Future<void> addCustomer(Customer customer) async {
-    await _db.push().set({
-      ...customer.toMap(),
-      'created_at': ServerValue.timestamp,
-    });
+    await _db.push().set({...customer.toMap(), 'created_at': ServerValue.timestamp});
   }
 
   Future<void> updateCustomer(Customer customer) async {
-    await _db.child(customer.id).update({
-      ...customer.toMap(),
-      'updated_at': ServerValue.timestamp,
-    });
+    await _db.child(customer.id).update({...customer.toMap(), 'updated_at': ServerValue.timestamp});
   }
 
   Future<void> deleteCustomer(String id) async {
